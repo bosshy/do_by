@@ -1,8 +1,10 @@
 require "do_by/version"
+require "do_by/handler"
 require "rugged"
 require "date"
 
 module DoBy
+  HANDLERS = [DoBy::DueInHandler, DoBy::DueByHandler]
   class << self
     attr_writer :enable, :default_due_in_days
 
@@ -23,74 +25,24 @@ module DoBy
   class LateTask < RuntimeError; end
   class NoDueDateTask < RuntimeError; end
 
-  class Handler
-    class << self
-      def handles?(options)
-        !!options[options_key]
-      end
-      attr_accessor :options_key
-    end
-
-    attr_accessor :due_value
-    def initialize(options)
-      self.due_value = options[self.class.options_key]
-    end
-
-    def due?; raise 'implement!' end
-  end
-
-  class DueInHandler < Handler
-    self.options_key = :due_in
-
-    alias_method :due_in, :due_value
-
-    def due?
-      caller_unparsed = caller[2]
-      match = caller_unparsed.match(/(^.*?):(\d*)/)
-      caller_file = match[1]
-      caller_line = match[2].to_i
-
-      repo = Rugged::Repository.discover(caller_file)
-
-      work_dir = repo.workdir
-      relative_path = caller_file.sub work_dir, ''
-
-      blame = Rugged::Blame.new repo, relative_path, :min_line => caller_line, :max_line => caller_line
-      time = blame.first[:final_signature][:time]
-      @overdue_days = (Date.today - time.to_date).to_i - due_in
-      return @overdue_days >= 1
-
-    rescue Rugged::RepositoryError, Rugged::OSError
-      return false
-    end
-
-    def overdue_message
-      "is overdue by #{@overdue_days} days"
-    end
-  end
-
-  class DueByHandler < Handler
-    self.options_key = :due_date
-    alias_method :due_date, :due_value
-    def due?
-      Date.parse(due_date) < Date.today
-    end
-
-    def overdue_message
-      "is overdue since #{due_date}"
-    end
-  end
-
   class Note
-    HANDLERS = [DoBy::DueInHandler, DoBy::DueByHandler]
     def initialize(description, options={})
+      @description, @options = description, options
 
-      matching_handlers = HANDLERS.select{|handler| handler.handles?(options)}
+      matching_handlers = DoBy::HANDLERS.select{|handler| handler.handles?(options)}
       raise ArgumentError.new("can't give both due date and due in") if matching_handlers.size > 1
-      handler_class = matching_handlers.first || DoBy.default_handler
-      handler = handler_class.new(options)
+      handler = if matching_handlers.any?
+                  matching_handlers.first.new(options)
+                else
+                  DoBy.default_handler.new(options.merge(DoBy.default_handler.default_options))
+                end
 
-      raise LateTask.new("#{description} #{handler.overdue_message}") if handler.due?
+      raise LateTask.new("TODO: #{description} \n#{handler.overdue_message} \n#{location_msg}") if handler.due?
+    end
+
+    private
+    def location_msg
+      "File: #{@options[:todo_file]} \nLine: #{@options[:todo_line]}"
     end
   end
 end
@@ -99,6 +51,12 @@ end
 module Kernel
   def TODO(*args)
     return unless DoBy.enabled?
+    todo_location = caller[0].match(/(^.*?):(\d*)/)
+    todo_file = todo_location[1]
+    todo_line = todo_location[2].to_i
+    todo_opts = {:todo_file => todo_file, :todo_line => todo_line}
+    args.last.is_a?(Hash) ? args.last.merge!(todo_opts) : args.push(todo_opts)
+
     DoBy::Note.new(*args)
   end
   alias_method :FIXME, :TODO
