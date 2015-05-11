@@ -1,5 +1,5 @@
 module DoBy
-  module Repository
+  class Repository
     class Blame
 
       def initialize(blame_hash={})
@@ -7,11 +7,11 @@ module DoBy
       end
 
       def commit_date
-        @blame_hash[:time] || DateTime.now
+        @blame_hash[:time].to_datetime || DateTime.now
       end
 
       def author
-        @blame_hash[:author] || 'unknown'
+        @blame_hash[:name] || 'unknown'
       end
 
       def email

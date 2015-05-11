@@ -15,14 +15,14 @@ module DoBy
         return Blame.new unless project_repository
 
         relative_path = path_relative_to_workdir(options[:todo_file])
+        return Blame.new unless  no_uncommitted_changes_in_file?(relative_path)
 
-        if no_uncommitted_changes_in_file?(relative_path)
-          blame_hash = Rugged::Blame.new(project_repository, relative_path,
-                            :min_line => options[:todo_line], :max_line => options[:todo_line]).
-              first[:final_signature]
+        blame_hash = Rugged::Blame.new(project_repository, relative_path,
+                                       :min_line => options[:todo_line], :max_line => options[:todo_line]).
+            first[:final_signature]
 
-          Blame.new(blame_hash)
-        end
+        Blame.new(blame_hash)
+
       rescue Rugged::RepositoryError, Rugged::OSError, StandardError
         Blame.new
       end
@@ -37,7 +37,7 @@ module DoBy
       end
 
       def path_relative_to_workdir(absolute_path)
-        absolute_path.sub(project_repository.workdir, '')
+        absolute_path.sub(project_repository.workdir, '') if project_repository
       end
 
       def git_conf

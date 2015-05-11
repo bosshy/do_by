@@ -1,4 +1,5 @@
 require "do_by/version"
+require "do_by/note"
 require "do_by/repository"
 require "do_by/handlers"
 require "rugged"
@@ -8,7 +9,7 @@ module DoBy
   class << self
     attr_writer :enable,
                 :default_due_in_days,
-                :raise_only_for_culprit
+                :raise_only_for_author
 
     def enabled?
       @enable ||= ENV['ENABLE_DO_BY']
@@ -19,45 +20,13 @@ module DoBy
     end
 
     def raise_only_for_author?
-      @raise_only_for_culprit ||= false
+      @raise_only_for_author ||= false
     end
 
     def default_handler
       DueIn
     end
 
-  end
-
-  class LateTask < RuntimeError; end
-  class NoDueDateTask < RuntimeError; end
-
-  class Note
-    def initialize(*args)
-      @description = args.first
-      @options = args.last.is_a?(Hash) ? args.pop : {}
-      puts args
-      puts @options
-
-      matching_handlers = DoBy::HANDLERS.select{|handler| handler.handles?(*args, @options)}
-      raise ArgumentError.new("can't give both due date and due in") if matching_handlers.size > 1
-      handler = if matching_handlers.any?
-                  matching_handlers.first.new(*args, @options)
-                else
-                  DoBy::DEFAULT_HANDLER.new(*args, @options)
-                end
-
-      raise LateTask.new("TODO: #{@description} \n#{handler.overdue_message} \n#{location_msg}") if raise_conditions_met?
-    end
-
-    private
-    def location_msg
-      "File: #{@options[:todo_file]} \nLine: #{@options[:todo_line]}"
-    end
-
-    def raise_conditions_met?
-      handler.due? and
-      handler.current_user_responsible?
-    end
   end
 end
 

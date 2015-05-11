@@ -20,19 +20,15 @@ module DoBy
 
 
       def culprit_msg
-        " \nCulprit: #{culprit[:name]} - #{culprit[:email]}" if culprit
-      end
-
-      private
-      def culprit
-        @culprit ||= {:name => blame[:name], :email => blame[:email]} if blame
+        " \nCulprit: #{blame.author} - #{blame.email}" if blame.exists?
       end
 
       def current_user_responsible?
         return true unless DoBy.raise_only_for_author?
-
         blame.current_user_responsible?
       end
+
+      private
 
       def blame
         @blame ||= DoBy::Repository.blame(options)
