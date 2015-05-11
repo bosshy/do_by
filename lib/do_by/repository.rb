@@ -1,24 +1,30 @@
+require 'do_by/repository/blame'
+
 module DoBy
   class Repository
     class << self
       attr_reader :project_repository
 
       def project_repository=(repo_path)
-        @project_repository = Rugged::Repository.discover(repo_path)
+        @project_repository = Rugged::Repository.discover(repo_path) if @project_repository.nil?
       rescue false
       end
 
       def blame(options)
-        @project_repository ||= Rugged::Repository.discover(options[:todo_file])
+        self.project_repository = options[:todo_file]
+        return Blame.new unless project_repository
+
         relative_path = path_relative_to_workdir(options[:todo_file])
 
         if no_uncommitted_changes_in_file?(relative_path)
-          Rugged::Blame.new(project_repository, relative_path,
+          blame_hash = Rugged::Blame.new(project_repository, relative_path,
                             :min_line => options[:todo_line], :max_line => options[:todo_line]).
               first[:final_signature]
+
+          Blame.new(blame_hash)
         end
       rescue Rugged::RepositoryError, Rugged::OSError, StandardError
-        nil
+        Blame.new
       end
 
       def current_user

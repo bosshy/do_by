@@ -18,7 +18,7 @@ module DoBy
       @default_due_in_days ||= 30
     end
 
-    def raise_only_for_culprit
+    def raise_only_for_author?
       @raise_only_for_culprit ||= false
     end
 
@@ -46,12 +46,17 @@ module DoBy
                   DoBy::DEFAULT_HANDLER.new(*args, @options)
                 end
 
-      raise LateTask.new("TODO: #{@description} \n#{handler.overdue_message} \n#{location_msg}") if handler.due?
+      raise LateTask.new("TODO: #{@description} \n#{handler.overdue_message} \n#{location_msg}") if raise_conditions_met?
     end
 
     private
     def location_msg
       "File: #{@options[:todo_file]} \nLine: #{@options[:todo_line]}"
+    end
+
+    def raise_conditions_met?
+      handler.due? and
+      handler.current_user_responsible?
     end
   end
 end

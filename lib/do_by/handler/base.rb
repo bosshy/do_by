@@ -28,9 +28,16 @@ module DoBy
         @culprit ||= {:name => blame[:name], :email => blame[:email]} if blame
       end
 
+      def current_user_responsible?
+        return true unless DoBy.raise_only_for_author?
+
+        blame.current_user_responsible?
+      end
+
       def blame
         @blame ||= DoBy::Repository.blame(options)
       end
+
     end
   end
 end

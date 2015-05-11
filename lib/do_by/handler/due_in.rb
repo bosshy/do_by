@@ -11,18 +11,15 @@ module DoBy
       alias_method :due_in, :due_value
 
       def due?
-
-        if blame
-          time = blame[:time]
-          @overdue_days = (Date.today - time.to_date).to_i - due_in
-          return @overdue_days >= 1
-
-        else return false
-        end
+        return overdue_days >= 1
       end
 
       def overdue_message
-        "is #{@overdue_days} days overdue #{culprit_msg}"
+        "is #{overdue_days} days overdue #{culprit_msg}"
+      end
+
+      def overdue_days
+        @overdue_days ||= (Date.today - blame.commit_date).to_i - due_in
       end
 
     end
