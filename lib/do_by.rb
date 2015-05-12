@@ -27,6 +27,14 @@ module DoBy
       DueIn
     end
 
+    def on_due &block
+      @due_action = block
+    end
+
+    def due_action
+      @due_action ||= ->(due_task) { raise(due_task) }
+    end
+
   end
 end
 

@@ -7,7 +7,7 @@ module DoBy
       end
 
       def commit_date
-        @blame_hash[:time].to_datetime || DateTime.now
+        @blame_hash[:time] ? @blame_hash[:time].to_datetime : DateTime.now
       end
 
       def author
