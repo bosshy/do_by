@@ -14,33 +14,30 @@ describe DoBy::Note do
       ENV["ENABLE_DO_BY"] = nil
     end
 
+    let(:note){instance_double 'DoBy::Note', :raise_if_overdue => false}
+
     it "is happy with a date in the future" do
       expect { DoBy::Note.new('foo', '2014-06-01 19:00') }.to_not raise_error
     end
 
     it "supports making a TODO note" do
-      expect(DoBy::Note).to receive(:new).with('fix this', '2012-01-01')
+      expect(DoBy::Note).to receive(:new).with('fix this', '2012-01-01', anything).and_return(note)
       TODO 'fix this', '2012-01-01'
     end
 
     it "supports making a FIXME note" do
-      expect(DoBy::Note).to receive(:new).with('fix this', '2012-01-01')
+      expect(DoBy::Note).to receive(:new).with('fix this', '2012-01-01', anything).and_return(note)
       FIXME 'fix this', '2012-01-01'
     end
 
     it "supports making a OPTIMIZE note" do
-      expect(DoBy::Note).to receive(:new).with('fix this', '2012-01-01')
+      expect(DoBy::Note).to receive(:new).with('fix this', '2012-01-01', anything).and_return(note)
       OPTIMIZE 'fix this', '2012-01-01'
     end
 
     it "is not happy with a date in the past" do
-      expect { DoBy::Note.new('foo', '2014-06-01 18:00') }.
-        to raise_error(DoBy::LateTask, "foo is overdue (2014-06-01 18:00)")
-    end
-
-    it "is not happy with a note without a date" do
-      expect { DoBy::Note.new('foo') }.
-        to raise_error(DoBy::NoDueDateTask, "missing due date")
+      expect { DoBy::Note.new('foo', '2014-06-01 18:00').raise_if_overdue }.
+        to raise_error(DoBy::LateTask, /2014-06-01 18:00/)
     end
   end
 

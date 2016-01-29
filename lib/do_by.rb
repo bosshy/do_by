@@ -4,6 +4,8 @@ require "do_by/repository"
 require "do_by/handlers"
 require "rugged"
 require "date"
+require "yaml"
+require "rubocop/cop/do_by/expired_todos" if defined?(RuboCop)
 
 module DoBy
   class << self
@@ -12,7 +14,11 @@ module DoBy
                 :raise_only_for_author
 
     def enabled?
-      @enable ||= ENV['ENABLE_DO_BY']
+      unless @enable.nil?
+        @enabled
+      else
+        @enabled = YAML.load(ENV['ENABLE_DO_BY'].to_s)
+      end
     end
 
     def default_due_in_days
@@ -20,7 +26,11 @@ module DoBy
     end
 
     def raise_only_for_author?
-      @raise_only_for_author ||= false
+      unless @raise_only_for_author.nil?
+        @raise_only_for_author
+      else
+        @raise_only_for_author = false
+      end
     end
 
     def default_handler
@@ -34,7 +44,6 @@ module DoBy
     def due_action
       @due_action ||= ->(due_task) { raise(due_task) }
     end
-
   end
 end
 
@@ -48,7 +57,7 @@ module Kernel
     todo_opts = {:todo_file => todo_file, :todo_line => todo_line}
     args.last.is_a?(Hash) ? args.last.merge!(todo_opts) : args.push(todo_opts)
 
-    DoBy::Note.new(*args)
+    DoBy::Note.new(*args).raise_if_overdue
   end
   alias_method :FIXME, :TODO
   alias_method :OPTIMIZE, :TODO

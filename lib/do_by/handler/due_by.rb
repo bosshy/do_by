@@ -1,5 +1,7 @@
 module DoBy
   module Handler
+
+    # format: TODO 'todo description', :due_date => '2015-10-31'
     class DueBy < Base
       self.options_key = :due_date
       alias_method :due_date, :due_value
@@ -8,11 +10,12 @@ module DoBy
         Date.parse(due_date) < Date.today
       end
 
-      def overdue_message
-        "is overdue since #{due_date} "
+      def overdue_info
+        "is overdue since #{due_date}"
       end
     end
 
+    # format: TODO 'todo description', '2015-10-31'
     class DueBy2ndArgument < DueBy
 
       def initialize(*args, options)

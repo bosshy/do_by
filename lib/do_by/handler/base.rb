@@ -19,8 +19,8 @@ module DoBy
       def due?; raise 'implement!' end
 
 
-      def culprit_msg
-        " \nCulprit: #{blame.author} - #{blame.email}" if blame.exists?
+      def culprit_info
+        "Culprit: #{blame.author} - #{blame.email}" if blame.exists?
       end
 
       def current_user_responsible?

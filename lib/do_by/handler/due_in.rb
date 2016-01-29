@@ -1,5 +1,6 @@
 module DoBy
   module Handler
+    # format: TODO 'todo description', :due_in => 25
     class DueIn < Base
 
       self.options_key = :due_in
@@ -14,8 +15,8 @@ module DoBy
         return overdue_days >= 1
       end
 
-      def overdue_message
-        "is #{overdue_days} days overdue #{culprit_msg}"
+      def overdue_info
+        "is #{overdue_days} days overdue"
       end
 
       def overdue_days

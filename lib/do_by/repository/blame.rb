@@ -2,6 +2,11 @@ module DoBy
   class Repository
     class Blame
 
+      # empty blame used instead of nil
+      def self.none
+        @none ||= new()
+      end
+
       def initialize(blame_hash={})
         @blame_hash = blame_hash
       end
