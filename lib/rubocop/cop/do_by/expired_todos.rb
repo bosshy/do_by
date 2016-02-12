@@ -22,7 +22,7 @@ module RuboCop
                      when cl.due_in?
                        ::DoBy::Note.new(cl.note, :todo_file => file_path, :todo_line =>file_line, :due_in => cl.due_in_val)
                      when cl.expires?
-                       ::DoBy::Note.new(cl.note, :todo_file => file_path, :todo_line =>file_line, :due_in => DoBy.default_due_in_days)
+                       ::DoBy::Note.new(cl.note, :todo_file => file_path, :todo_line =>file_line, :due_in => ::DoBy.default_due_in_days)
                      else
                        nil
                    end
