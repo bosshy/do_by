@@ -1,6 +1,6 @@
 module DoBy
   class Repository
-    class Blame
+    class BlameResult
 
       # empty blame used instead of nil
       def self.none

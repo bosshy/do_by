@@ -2,7 +2,6 @@ require "do_by/version"
 require "do_by/note"
 require "do_by/repository"
 require "do_by/handlers"
-require "rugged"
 require "date"
 require "yaml"
 require "rubocop/cop/do_by/expired_todos" if defined?(RuboCop)
@@ -11,7 +10,8 @@ module DoBy
   class << self
     attr_writer :enable,
                 :default_due_in_days,
-                :raise_only_for_author
+                :raise_only_for_author,
+                :git_cmd
 
     def enabled?
       unless @enable.nil?
@@ -23,6 +23,10 @@ module DoBy
 
     def default_due_in_days
       @default_due_in_days ||= 30
+    end
+
+    def git_cmd
+      @git_cmd ||= 'git'
     end
 
     def raise_only_for_author?
